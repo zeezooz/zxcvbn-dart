@@ -1,207 +1,263 @@
-frequency_lists = require('./frequency_lists')
-adjacency_graphs = require('./adjacency_graphs')
-scoring = require('./scoring')
+import 'adjacency_graphs.dart';
+import 'frequency_lists.dart';
+import 'match.dart';
+import 'scoring.dart';
 
-build_ranked_dict = (ordered_list) ->
-  result = {}
-  i = 1 # rank starts at 1, not 0
-  for word in ordered_list
-    result[word] = i
-    i += 1
-  result
+Map<String, int> build_ranked_dict(List<String> ordered_list) {
+  final Map<String, int> result = {};
+  int i = 1; // # rank starts at 1, not 0
+  for (String word in ordered_list) {
+    result[word] = i;
+    i += 1;
+  }
+  return result;
+}
 
-RANKED_DICTIONARIES = {}
-for name, lst of frequency_lists
-  RANKED_DICTIONARIES[name] = build_ranked_dict lst
+final RANKED_DICTIONARIES = frequency_lists.map(
+  (key, value) => MapEntry<String, Map<String, int>>(
+    key,
+    build_ranked_dict(value),
+  ),
+);
 
-GRAPHS =
-  qwerty:     adjacency_graphs.qwerty
-  dvorak:     adjacency_graphs.dvorak
-  keypad:     adjacency_graphs.keypad
-  mac_keypad: adjacency_graphs.mac_keypad
+final GRAPHS = {
+  'qwerty': adjacency_graphs.qwerty,
+  'dvorak': adjacency_graphs.dvorak,
+  'keypad': adjacency_graphs.keypad,
+  'mac_keypad': adjacency_graphs.mac_keypad,
+};
 
-L33T_TABLE =
-  a: ['4', '@']
-  b: ['8']
-  c: ['(', '{', '[', '<']
-  e: ['3']
-  g: ['6', '9']
-  i: ['1', '!', '|']
-  l: ['1', '|', '7']
-  o: ['0']
-  s: ['$', '5']
-  t: ['+', '7']
-  x: ['%']
-  z: ['2']
+const L33T_TABLE = {
+  'a': ['4', '@'],
+  'b': ['8'],
+  'c': ['(', '{', '[', '<'],
+  'e': ['3'],
+  'g': ['6', '9'],
+  'i': ['1', '!', '|'],
+  'l': ['1', '|', '7'],
+  'o': ['0'],
+  's': ['\$', '5'],
+  't': ['+', '7'],
+  'x': ['%'],
+  'z': ['2'],
+};
 
-REGEXEN =
-  recent_year:  /19\d\d|200\d|201\d/g
+Map<String, RegExp> REGEXEN = {
+  'recent_year': RegExp(r'19\d\d|200\d|201\d/g'),
+};
 
-DATE_MAX_YEAR = 2050
-DATE_MIN_YEAR = 1000
-DATE_SPLITS =
-  4:[      # for length-4 strings, eg 1191 or 9111, two ways to split:
-    [1, 2] # 1 1 91 (2nd split starts at index 1, 3rd at index 2)
-    [2, 3] # 91 1 1
-    ]
-  5:[
-    [1, 3] # 1 11 91
-    [2, 3] # 11 1 91
-    ]
-  6:[
-    [1, 2] # 1 1 1991
-    [2, 4] # 11 11 91
-    [4, 5] # 1991 1 1
-    ]
-  7:[
-    [1, 3] # 1 11 1991
-    [2, 3] # 11 1 1991
-    [4, 5] # 1991 1 11
-    [4, 6] # 1991 11 1
-    ]
-  8:[
-    [2, 4] # 11 11 1991
-    [4, 6] # 1991 11 11
-    ]
+const DATE_MAX_YEAR = 2050;
+const DATE_MIN_YEAR = 1000;
+const DATE_SPLITS = {
+  4: [
+    // # for length-4 strings, eg 1191 or 9111, two ways to split:
+    [1, 2], // # 1 1 91 (2nd split starts at index 1, 3rd at index 2)
+    [2, 3], // # 91 1 1
+  ],
+  5: [
+    [1, 3], //# 1 11 91
+    [2, 3], //# 11 1 91
+  ],
+  6: [
+    [1, 2], //# 1 1 1991
+    [2, 4], //# 11 11 91
+    [4, 5], //# 1991 1 1
+  ],
+  7: [
+    [1, 3], // # 1 11 1991
+    [2, 3], // # 11 1 1991
+    [4, 5], // # 1991 1 11
+    [4, 6], // # 1991 11 1
+  ],
+  8: [
+    [2, 4], // # 11 11 1991
+    [4, 6], // # 1991 11 11
+  ]
+};
 
-matching =
-  empty: (obj) -> (k for k of obj).length == 0
-  extend: (lst, lst2) -> lst.push.apply lst, lst2
-  translate: (string, chr_map) -> (chr_map[chr] or chr for chr in string.split('')).join('')
-  mod: (n, m) -> ((n % m) + m) % m # mod impl that works for negative numbers
-  sorted: (matches) ->
-    # sort on i primary, j secondary
-    matches.sort (m1, m2) ->
-      (m1.i - m2.i) or (m1.j - m2.j)
+class matching {
+  static empty(Map obj) => obj.isEmpty;
+//  translate: (string, chr_map) -> (chr_map[chr] or chr for chr in string.split('')).join('')
+//  mod: (n, m) -> ((n % m) + m) % m # mod impl that works for negative numbers
+  static List<PasswordMatch> sorted(List<PasswordMatch> matches) {
+    // # sort on i primary, j secondary
+    matches
+        .sort((m1, m2) => (m1.i - m2.i) != 0 ? (m1.i - m2.i) : (m1.j - m2.j));
+    return matches;
+  }
 
-  # ------------------------------------------------------------------------------
-  # omnimatch -- combine everything ----------------------------------------------
-  # ------------------------------------------------------------------------------
+//  # ------------------------------------------------------------------------------
+//  # omnimatch -- combine everything ----------------------------------------------
+//  # ------------------------------------------------------------------------------
+//
+  static omnimatch(String password) {
+    List<PasswordMatch> matches = [];
+    final matchers = [
+      dictionary_match,
+      reverse_dictionary_match,
+//    @l33t_match
+//    @spatial_match
+//    @repeat_match
+//    @sequence_match
+//    @regex_match
+//    @date_match
+    ];
+    for (Function matcher in matchers) {
+      matches = [...matches, ...matcher.call(password)];
+    }
+    return sorted(matches);
+  }
 
-  omnimatch: (password) ->
-    matches = []
-    matchers = [
-      @dictionary_match
-      @reverse_dictionary_match
-      @l33t_match
-      @spatial_match
-      @repeat_match
-      @sequence_match
-      @regex_match
-      @date_match
-    ]
-    for matcher in matchers
-      @extend matches, matcher.call(this, password)
-    @sorted matches
+  //-------------------------------------------------------------------------------
+  // dictionary match (common passwords, english, last names, etc) ----------------
+  //-------------------------------------------------------------------------------
 
-  #-------------------------------------------------------------------------------
-  # dictionary match (common passwords, english, last names, etc) ----------------
-  #-------------------------------------------------------------------------------
+  static List<PasswordMatch> dictionary_match(String password,
+      {Map<String, Map<String, int>> ranked_dictionaries}) {
+    ranked_dictionaries ??= RANKED_DICTIONARIES;
+    // _ranked_dictionaries variable is for unit testing purposes
+    final List<PasswordMatch> matches = [];
+    int len = password.length;
+    final password_lower = password.toLowerCase();
+    ranked_dictionaries.forEach((dictionary_name, ranked_dict) {
+      for (int i = 0; i < len; i++) {
+        for (int j = i; j < len; j++) {
+          if (ranked_dict.containsKey(password_lower.substring(i, j))) {
+            final word = password_lower.substring(i, j);
+            final rank = ranked_dict[word];
 
-  dictionary_match: (password, _ranked_dictionaries = RANKED_DICTIONARIES) ->
-    # _ranked_dictionaries variable is for unit testing purposes
-    matches = []
-    len = password.length
-    password_lower = password.toLowerCase()
-    for dictionary_name, ranked_dict of _ranked_dictionaries
-      for i in [0...len]
-        for j in [i...len]
-          if password_lower[i..j] of ranked_dict
-            word = password_lower[i..j]
-            rank = ranked_dict[word]
-            matches.push
-              pattern: 'dictionary'
-              i: i
-              j: j
-              token: password[i..j]
-              matched_word: word
-              rank: rank
-              dictionary_name: dictionary_name
-              reversed: false
-              l33t: false
-    @sorted matches
+            matches.add(PasswordMatch()
+              ..pattern = 'dictionary'
+              ..i = i
+              ..j = j
+              ..token = password.substring(i, j)
+              ..matched_word = word
+              ..rank = rank
+              ..dictionary_name = dictionary_name
+              ..reversed = false
+              ..l33t = false);
+          }
+        }
+      }
+    });
+    return sorted(matches);
+  }
 
-  reverse_dictionary_match: (password, _ranked_dictionaries = RANKED_DICTIONARIES) ->
-    reversed_password = password.split('').reverse().join('')
-    matches = @dictionary_match reversed_password, _ranked_dictionaries
-    for match in matches
-      match.token = match.token.split('').reverse().join('') # reverse back
-      match.reversed = true
-      # map coordinates back to original string
-      [match.i, match.j] = [
-        password.length - 1 - match.j
-        password.length - 1 - match.i
-      ]
-    @sorted matches
+  static reverse_dictionary_match(String password,
+      {Map<String, Map<String, int>> ranked_dictionaries}) {
+    ranked_dictionaries ??= RANKED_DICTIONARIES;
+    final reversed_password = password.split('').reversed.join('');
+    final matches = dictionary_match(reversed_password,
+        ranked_dictionaries: ranked_dictionaries);
+    for (PasswordMatch match in matches) {
+      match.token = match.token.split('').reversed.join(''); //# reverse back
+      match.reversed = true;
+      //# map coordinates back to original string
+      match.i = password.length - 1 - match.j;
+      match.j = password.length - 1 - match.i;
+    }
+    return sorted(matches);
+  }
 
-  set_user_input_dictionary: (ordered_list) ->
-    RANKED_DICTIONARIES['user_inputs'] = build_ranked_dict ordered_list.slice()
+  static set_user_input_dictionary(List<String> ordered_list) {
+    RANKED_DICTIONARIES['user_inputs'] = build_ranked_dict([...ordered_list]);
+  }
 
-  #-------------------------------------------------------------------------------
-  # dictionary match with common l33t substitutions ------------------------------
-  #-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  // dictionary match with common l33t substitutions ------------------------------
+  //-------------------------------------------------------------------------------
 
-  # makes a pruned copy of l33t_table that only includes password's possible substitutions
-  relevant_l33t_subtable: (password, table) ->
-    password_chars = {}
-    for chr in password.split('')
-      password_chars[chr] = true
-    subtable = {}
-    for letter, subs of table
-      relevant_subs = (sub for sub in subs when sub of password_chars)
-      if relevant_subs.length > 0
-        subtable[letter] = relevant_subs
-    subtable
+  // makes a pruned copy of l33t_table that only includes password's possible substitutions
+  static Map<String, List<String>> relevant_l33t_subtable(
+      String password, Map<String, List<String>> table) {
+    final Map<String, bool> password_chars = {};
+    for (final chr in password.split('')) {
+      password_chars[chr] = true;
+    }
+    final Map<String, List<String>> subtable = {};
+    table.forEach((letter, subs) {
+      final relevant_subs =
+          subs.where((sub) => password_chars.containsKey(sub));
+      if (relevant_subs.length > 0) {
+        subtable[letter] = relevant_subs.toList();
+      }
+    });
+    return subtable;
+  }
 
-  # returns the list of possible 1337 replacement dictionaries for a given password
-  enumerate_l33t_subs: (table) ->
-    keys = (k for k of table)
-    subs = [[]]
+  static dedup(subs) {
+    //final deduped = [];
+    //final members = {};
+    //for (final sub in subs) {
+    //  final assoc = [];
+    //  sub.forEach((k, v) {assoc.add([k,v]);});
+    //  assoc.sort();
+    //  final label = (k+','+v for k,v in assoc).join('-')
+    //  unless label of members
+    //    members[label] = true
+    //    deduped.push sub
+    //}
+    //return deduped;
+  }
+  static enumerate_l33t_subs_helper(List<String> keys,
+      Map<String, List<String>> table, List<List<List<String>>> subs) {
+    if (keys.isEmpty) {
+      return;
+    }
+    final String first_key = keys[0];
+    List<String> rest_keys = keys.sublist(1);
+    final next_subs = [];
+    for (final l33t_chr in table[first_key]) {
+      for (final sub in subs) {
+        int dup_l33t_index = -1;
+        for (int i = 0; i <= sub.length; i++) {
+          if (sub[i][0] == l33t_chr) {
+            dup_l33t_index = i;
+            break;
+          }
+        }
+        if (dup_l33t_index == -1) {
+          final sub_extension = [
+            ...sub,
+            ...[l33t_chr, first_key]
+          ];
+          next_subs.add(sub_extension);
+        } else {
+          final sub_alternative = [...sub];
+          sub_alternative.removeRange(dup_l33t_index, dup_l33t_index + 1);
+          sub_alternative.add([l33t_chr, first_key]);
+          next_subs.add(sub);
+          next_subs.add(sub_alternative);
+        }
+      }
+    }
+    subs = dedup(next_subs);
+    enumerate_l33t_subs_helper(rest_keys, table, subs);
+  }
 
-    dedup = (subs) ->
-      deduped = []
-      members = {}
-      for sub in subs
-        assoc = ([k,v] for k,v in sub)
-        assoc.sort()
-        label = (k+','+v for k,v in assoc).join('-')
-        unless label of members
-          members[label] = true
-          deduped.push sub
-      deduped
+  // returns the list of possible 1337 replacement dictionaries for a given password
+  static enumerate_l33t_subs(Map<String, List<String>> table) {
+    final keys = table.keys;
+    var subs = [[]];
 
-    helper = (keys) ->
-      return if not keys.length
-      first_key = keys[0]
-      rest_keys = keys[1..]
-      next_subs = []
-      for l33t_chr in table[first_key]
-        for sub in subs
-          dup_l33t_index = -1
-          for i in [0...sub.length]
-            if sub[i][0] == l33t_chr
-              dup_l33t_index = i
-              break
-          if dup_l33t_index == -1
-            sub_extension = sub.concat [[l33t_chr, first_key]]
-            next_subs.push sub_extension
-          else
-            sub_alternative = sub.slice(0)
-            sub_alternative.splice(dup_l33t_index, 1)
-            sub_alternative.push [l33t_chr, first_key]
-            next_subs.push sub
-            next_subs.push sub_alternative
-      subs = dedup next_subs
-      helper(rest_keys)
+    enumerate_l33t_subs_helper(keys, table, subs);
 
-    helper(keys)
-    sub_dicts = [] # convert from assoc lists to dicts
-    for sub in subs
-      sub_dict = {}
-      for [l33t_chr, chr] in sub
-        sub_dict[l33t_chr] = chr
-      sub_dicts.push sub_dict
-    sub_dicts
+    final sub_dicts = []; // # convert from assoc lists to dicts
+
+    for (final sub in subs) {
+      final sub_dict = {};
+      final l33t_chr = sub[0];
+      final chr = sub[1];
+      sub_dict[l33t_chr] = chr;
+      sub_dicts.add(sub_dict);
+    }
+    return sub_dicts;
+  }
+}
+/*
+
+
+}
 
   l33t_match: (password, _ranked_dictionaries = RANKED_DICTIONARIES, _l33t_table = L33T_TABLE) ->
     matches = []
@@ -606,4 +662,4 @@ matching =
       # 15 -> 2015
       year + 2000
 
-module.exports = matching
+*/

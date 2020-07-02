@@ -16,11 +16,15 @@ class PasswordMatch {
   String regex_name;
   dynamic regex_match;
   int year;
-  dynamic separator;
+  int month;
+  int day;
+  String separator;
   String graph;
   int turns;
   int shifted_count;
   int uppercase_variations;
   int l33t_variations;
   Map sub;
+  String base_token;
+  bool has_full_year;
 }
