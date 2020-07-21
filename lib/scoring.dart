@@ -347,14 +347,15 @@ class scoring {
   }
 
   static final KEYBOARD_AVERAGE_DEGREE =
-      calc_average_degree(adjacency_graphs.qwerty);
+      calc_average_degree(adjacency_graphs['qwerty']);
   // slightly different for keypad/mac keypad, but close enough
   static final KEYPAD_AVERAGE_DEGREE =
-      calc_average_degree(adjacency_graphs.keypad);
+      calc_average_degree(adjacency_graphs['keypad']);
 
   static final KEYBOARD_STARTING_POSITIONS =
-      adjacency_graphs.qwerty.keys.length;
-  static final KEYPAD_STARTING_POSITIONS = adjacency_graphs.keypad.keys.length;
+      adjacency_graphs['qwerty'].keys.length;
+  static final KEYPAD_STARTING_POSITIONS =
+      adjacency_graphs['keypad'].keys.length;
 
   static int spatial_guesses(PasswordMatch match) {
     int s;
