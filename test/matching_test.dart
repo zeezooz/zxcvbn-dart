@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
-import 'package:zxcvbn/match.dart';
-import 'package:zxcvbn/matching.dart';
-import 'package:zxcvbn/adjacency_graphs.dart';
+import 'package:zxcvbn/src/match.dart';
+import 'package:zxcvbn/src/matching.dart';
+import 'package:zxcvbn/src/adjacency_graphs.dart';
 
 // takes a pattern and list of prefixes/suffixes
 // returns a bunch of variants of that pattern embedded

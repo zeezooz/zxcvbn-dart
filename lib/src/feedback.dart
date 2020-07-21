@@ -1,5 +1,4 @@
-import 'package:zxcvbn/match.dart';
-
+import './match.dart';
 import './scoring.dart';
 
 class Feedback {

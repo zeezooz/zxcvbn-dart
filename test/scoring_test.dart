@@ -1,8 +1,8 @@
 import 'dart:math' as Math;
 import 'package:test/test.dart';
-import 'package:zxcvbn/matching.dart';
-import 'package:zxcvbn/scoring.dart';
-import 'package:zxcvbn/match.dart';
+import 'package:zxcvbn/src/matching.dart';
+import 'package:zxcvbn/src/scoring.dart';
+import 'package:zxcvbn/src/match.dart';
 
 //matching = require '../src/matching'
 
@@ -414,40 +414,77 @@ void main() {
       expect(scoring.uppercase_variations(m), variants, reason: msg);
     }
   });
-  test ('l33t variants', () {
-  PasswordMatch match = PasswordMatch()..l33t = false;
-  expect( scoring.l33t_variations(match), 1, reason: "1 variant for non-l33t matches");
+  test('l33t variants', () {
+    PasswordMatch match = PasswordMatch()..l33t = false;
+    expect(scoring.l33t_variations(match), 1,
+        reason: "1 variant for non-l33t matches");
 
-  for (final testCase  in [
-    [ '',  1, {} ],
-    [ 'a', 1, {} ],
-    [ '4', 2, {'4': 'a'} ],
-    [ '4pple', 2, {'4': 'a'} ],
-    [ 'abcet', 1, {} ],
-    [ '4bcet', 2, {'4': 'a'} ],
-    [ 'a8cet', 2, {'8': 'b'} ],
-    [ 'abce+', 2, {'+': 't'} ],
-    [ '48cet', 4, {'4': 'a', '8': 'b'} ],
-    [ 'a4a4aa',  nCk(6, 2) + nCk(6, 1), {'4': 'a'} ],
-    [ '4a4a44',  nCk(6, 2) + nCk(6, 1), {'4': 'a'} ],
-    [ 'a44att+', (nCk(4, 2) + nCk(4, 1)) * nCk(3, 1), {'4': 'a', '+': 't'} ],
+    for (final testCase in [
+      ['', 1, {}],
+      ['a', 1, {}],
+      [
+        '4',
+        2,
+        {'4': 'a'}
+      ],
+      [
+        '4pple',
+        2,
+        {'4': 'a'}
+      ],
+      ['abcet', 1, {}],
+      [
+        '4bcet',
+        2,
+        {'4': 'a'}
+      ],
+      [
+        'a8cet',
+        2,
+        {'8': 'b'}
+      ],
+      [
+        'abce+',
+        2,
+        {'+': 't'}
+      ],
+      [
+        '48cet',
+        4,
+        {'4': 'a', '8': 'b'}
+      ],
+      [
+        'a4a4aa',
+        nCk(6, 2) + nCk(6, 1),
+        {'4': 'a'}
+      ],
+      [
+        '4a4a44',
+        nCk(6, 2) + nCk(6, 1),
+        {'4': 'a'}
+      ],
+      [
+        'a44att+',
+        (nCk(4, 2) + nCk(4, 1)) * nCk(3, 1),
+        {'4': 'a', '+': 't'}
+      ],
     ]) {
       final word = testCase[0];
       int variants = testCase[1];
       final sub = testCase[2];
-    match = PasswordMatch()
-      ..token= word
-      ..sub= sub
-      ..l33t= ! matching.empty(sub);
-String     msg = "extra l33t guesses of #{word} is #{variants}";
-    expect( scoring.l33t_variations(match), variants, reason: msg);
-  match = PasswordMatch()
-    ..token= 'Aa44aA'
-    ..l33t= true
-    ..sub= {'4': 'a'};
-variants = nCk(6, 2) + nCk(6, 1);
-  msg = "capitalization doesn't affect extra l33t guesses calc";
-  expect( scoring.l33t_variations(match), variants, reason: msg);
+      match = PasswordMatch()
+        ..token = word
+        ..sub = sub
+        ..l33t = !matching.empty(sub);
+      String msg = "extra l33t guesses of #{word} is #{variants}";
+      expect(scoring.l33t_variations(match), variants, reason: msg);
+      match = PasswordMatch()
+        ..token = 'Aa44aA'
+        ..l33t = true
+        ..sub = {'4': 'a'};
+      variants = nCk(6, 2) + nCk(6, 1);
+      msg = "capitalization doesn't affect extra l33t guesses calc";
+      expect(scoring.l33t_variations(match), variants, reason: msg);
     }
   });
 }
