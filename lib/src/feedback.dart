@@ -8,14 +8,14 @@ class Feedback {
 }
 
 class feedback {
-  Feedback default_feedback = Feedback()
+  static Feedback default_feedback = Feedback()
     ..warning = ''
     ..suggestions = [
       "Use a few words, avoid common phrases"
           "No need for symbols, digits, or uppercase letters"
     ];
 
-  Feedback get_feedback(score, List<PasswordMatch> sequence) {
+  static Feedback get_feedback(score, List<PasswordMatch> sequence) {
     // starting feedback
     if (sequence.length == 0) {
       return default_feedback;
@@ -50,7 +50,7 @@ class feedback {
     return feedback;
   }
 
-  Feedback get_match_feedback(PasswordMatch match, bool is_sole_match) {
+  static Feedback get_match_feedback(PasswordMatch match, bool is_sole_match) {
     String warning;
     switch (match.pattern) {
       case 'dictionary':
@@ -101,7 +101,8 @@ class feedback {
     }
   }
 
-  Feedback get_dictionary_match_feedback(PasswordMatch match, is_sole_match) {
+  static Feedback get_dictionary_match_feedback(
+      PasswordMatch match, is_sole_match) {
     String warning;
     if (match.dictionary_name == 'passwords') {
       if (is_sole_match && !match.l33t && !match.reversed) {
