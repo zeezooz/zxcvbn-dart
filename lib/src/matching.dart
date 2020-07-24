@@ -557,7 +557,7 @@ class matching {
         ..j = j
         ..token = match[0]
         ..base_token = base_token
-        ..base_guesses = base_guesses
+        ..base_guesses = base_guesses.round()
         ..base_matches = base_matches
         ..repeat_count = (match[0].length / base_token.length).round());
       lastIndex = j + 1;

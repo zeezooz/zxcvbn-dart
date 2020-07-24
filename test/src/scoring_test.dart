@@ -212,7 +212,7 @@ void main() {
       final match = PasswordMatch()
         ..token = token
         ..base_token = base_token
-        ..base_guesses = base_guesses
+        ..base_guesses = base_guesses.round()
         ..repeat_count = repeat_count;
       final expected_guesses = base_guesses * repeat_count;
       final msg =
@@ -315,7 +315,7 @@ void main() {
     match.guesses = null;
     match.token = 'ZxCvbn';
     match.shifted_count = 2;
-    int shifted_guesses = base_guesses * (nCk(6, 2) + nCk(6, 1));
+    double shifted_guesses = base_guesses * (nCk(6, 2) + nCk(6, 1));
     msg =
         "guesses is added for shifted keys, similar to capitals in dictionary matching";
     expect(scoring.spatial_guesses(match), shifted_guesses, reason: msg);
@@ -333,7 +333,7 @@ void main() {
       ..graph = 'qwerty'
       ..turns = 3
       ..shifted_count = 0;
-    int guesses = 0;
+    double guesses = 0;
     int L = match.token.length;
     final s = scoring.KEYBOARD_STARTING_POSITIONS;
     final d = scoring.KEYBOARD_AVERAGE_DEGREE;
