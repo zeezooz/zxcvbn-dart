@@ -4,8 +4,15 @@
 !demo/require.js
 !demo/mustache.js
 node_modules
-lib
 *~
 *.swp
 *.swo
 tmux-*.log
+
+# Dart files
+.packages
+
+# VS Code files
+launch.json
+
+
