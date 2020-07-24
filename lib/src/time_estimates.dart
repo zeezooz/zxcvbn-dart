@@ -6,7 +6,7 @@ class time_estimates {
       'offline_slow_hashing_1e4_per_second': guesses / 1e4,
       'offline_fast_hashing_1e10_per_second': guesses / 1e10
     };
-    final crack_times_display = {};
+    final crack_times_display = <String, String>{};
     for (final scenario in crack_times_seconds.keys) {
       final seconds = crack_times_seconds[scenario];
       crack_times_display[scenario] = display_time(seconds);
