@@ -345,7 +345,8 @@ class scoring {
       'symbols': 33,
     };
     if (char_class_bases[match.regex_name] != null) {
-      return Math.pow(char_class_bases[match.regex_name], match.token.length);
+      return Math.pow(char_class_bases[match.regex_name], match.token.length)
+          .toDouble();
     } else {
       switch (match.regex_name) {
         case 'recent_year':

@@ -72,7 +72,7 @@ void main() {
     approx_equal(log10(n), Math.log(n) / Math.log(10), "base change rule");
   });
   test('search', () {
-    final m = (i, j, guesses) => PasswordMatch()
+    final m = (int i, int j, double guesses) => PasswordMatch()
       ..i = i
       ..j = j
       ..guesses = guesses;
@@ -97,7 +97,7 @@ void main() {
 
     msg = (String s) =>
         "returns match + bruteforce when match covers a prefix of password: #{s}";
-    var matches = [m(0, 5, 1)];
+    var matches = [m(0, 5, 1.0)];
     m0 = matches[0];
     result = scoring.most_guessable_match_sequence(password, matches,
         exclude_additive: exclude_additive);
@@ -152,7 +152,7 @@ void main() {
     expect(result.sequence.length, 1, reason: msg("result.length == 1"));
     expect(result.sequence[0], m0, reason: msg("result.sequence[0] == m0"));
     // make sure ordering doesn't matter
-    m0.guesses = 3;
+    m0.guesses = 3.0;
     result = scoring.most_guessable_match_sequence(password, matches,
         exclude_additive: exclude_additive);
     expect(result.sequence.length, 1, reason: msg("result.length == 1"));
@@ -171,7 +171,7 @@ void main() {
 
     msg = (s) =>
         "when m0 covers m1 and m2, choose [m1, m2] when m0 > m1 * m2 * fact(2): #{s}";
-    m0.guesses = 5;
+    m0.guesses = 5.0;
     result = scoring.most_guessable_match_sequence(password, matches,
         exclude_additive: exclude_additive);
     expect(result.guesses, 4, reason: msg("total guesses == 4"));
@@ -386,7 +386,7 @@ void main() {
       ..sub = {'@': 'a'};
     msg =
         "extra guesses are added for both capitalization and common l33t substitutions";
-    int expected = 32 *
+    double expected = 32.0 *
         scoring.l33t_variations(match) *
         scoring.uppercase_variations(match);
     expect(scoring.dictionary_guesses(match), expected, reason: msg);
@@ -420,37 +420,37 @@ void main() {
         reason: "1 variant for non-l33t matches");
 
     for (final testCase in [
-      ['', 1, {}],
-      ['a', 1, {}],
+      ['', 1.0, {}],
+      ['a', 1.0, {}],
       [
         '4',
-        2,
+        2.0,
         {'4': 'a'}
       ],
       [
         '4pple',
-        2,
+        2.0,
         {'4': 'a'}
       ],
       ['abcet', 1, {}],
       [
         '4bcet',
-        2,
+        2.0,
         {'4': 'a'}
       ],
       [
         'a8cet',
-        2,
+        2.0,
         {'8': 'b'}
       ],
       [
         'abce+',
-        2,
+        2.0,
         {'+': 't'}
       ],
       [
         '48cet',
-        4,
+        4.0,
         {'4': 'a', '8': 'b'}
       ],
       [
@@ -470,7 +470,8 @@ void main() {
       ],
     ]) {
       final word = testCase[0];
-      double variants = testCase[1];
+      num v = testCase[1];
+      double variants = v.toDouble();
       final sub = testCase[2];
       match = PasswordMatch()
         ..token = word
