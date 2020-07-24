@@ -25,6 +25,11 @@ void main() {
       expect(result.score.round(), 4);
       expect(double.parse(result.guesses_log10.toStringAsFixed(5)), 14.43696);
     });
+    test('correcthorsebatterystaple with subs', () {
+      final result = zxcvbn.evaluate(r'coRrecth0rseba++ery9.23.2007staple$');
+      expect(result.score.round(), 4);
+      expect(double.parse(result.guesses_log10.toStringAsFixed(5)), 20.71185);
+    });
     test('p@ssword', () {
       final result = zxcvbn.evaluate('p@ssword');
       expect(result.score.round(), 0);

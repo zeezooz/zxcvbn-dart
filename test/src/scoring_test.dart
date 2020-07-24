@@ -50,7 +50,7 @@ void main() {
       [4, 2],
       [32, 5],
     ]) {
-      final n = i[0];
+      final n = i[0].toDouble();
       final result = i[1];
       expect(log2(n), result, reason: "log2(#{n}) == #{result}");
     }
@@ -59,12 +59,12 @@ void main() {
       [10, 1],
       [100, 2],
     ]) {
-      final n = i[0];
+      final n = i[0].toDouble();
       final result = i[1];
       expect(log10(n), result, reason: "log10(#{n}) == #{result}");
     }
-    final n = 17;
-    final p = 4;
+    final n = 17.toDouble();
+    final p = 4.toDouble();
     approx_equal(log10(n * p), log10(n) + log10(p), "product rule");
     approx_equal(log10(n / p), log10(n) - log10(p), "quotient rule");
     approx_equal(log10(Math.e), 1 / Math.log(10), "base switch rule");
@@ -470,7 +470,7 @@ void main() {
       ],
     ]) {
       final word = testCase[0];
-      int variants = testCase[1];
+      double variants = testCase[1];
       final sub = testCase[2];
       match = PasswordMatch()
         ..token = word

@@ -8,7 +8,7 @@ class PasswordMatch {
   String dictionary_name;
   bool reversed;
   bool l33t;
-  int guesses;
+  double guesses;
   double guesses_log10;
   int base_guesses;
   int repeat_count;

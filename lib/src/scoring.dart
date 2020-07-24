@@ -44,7 +44,7 @@ const MIN_SUBMATCH_GUESSES_SINGLE_CHAR = 10.0;
 const MIN_SUBMATCH_GUESSES_MULTI_CHAR = 50.0;
 
 class scoring {
-  static num nCk(num n, num k) {
+  static double nCk(num n, num k) {
     // http://blog.plover.com/math/choose.html
     if (k > n) {
       return 0;
@@ -52,7 +52,7 @@ class scoring {
     if (k == 0) {
       return 1;
     }
-    num r = 1;
+    double r = 1;
     for (int d = 1; d <= k; d++) {
       r *= n;
       r /= d;
@@ -61,8 +61,8 @@ class scoring {
     return r;
   }
 
-  static num log10(n) => Math.log(n) / Math.log(10);
-  static num log2(n) => Math.log(n) / Math.log(2);
+  static double log10(double n) => Math.log(n) / Math.log(10);
+  static double log2(double n) => Math.log(n) / Math.log(2);
 
   static double factorial(double n) {
     // unoptimized, called only on small n
@@ -263,7 +263,7 @@ class scoring {
   // ------------------------------------------------------------------------------
   // guess estimation -- one function per match pattern ---------------------------
   // ------------------------------------------------------------------------------
-  static int estimate_guesses(PasswordMatch match, String password) {
+  static double estimate_guesses(PasswordMatch match, String password) {
     // a match's guess estimate doesn't change. cache it.
     if (match.guesses != null) {
       return match.guesses;
@@ -286,7 +286,7 @@ class scoring {
       'date': date_guesses,
     };
     final double guesses = estimation_functions[match.pattern].call(match);
-    match.guesses = Math.max<double>(guesses, min_guesses).round();
+    match.guesses = Math.max<double>(guesses, min_guesses);
     match.guesses_log10 = log10(match.guesses);
     return match.guesses;
   }
@@ -425,7 +425,7 @@ class scoring {
   static double dictionary_guesses(PasswordMatch match) {
     match.base_guesses =
         match.rank; //# keep these as properties for display purposes
-    match.uppercase_variations = uppercase_variations(match);
+    match.uppercase_variations = uppercase_variations(match).round();
     match.l33t_variations = l33t_variations(match);
     var reversed_variations = (match.reversed ?? false) ? 2 : 1;
     return 1.0 *
@@ -440,7 +440,7 @@ class scoring {
   static final RegExp ALL_UPPER = RegExp(r'^[^a-z]+$');
   static final RegExp ALL_LOWER = RegExp(r'^[^A-Z]+$');
 
-  static int uppercase_variations(PasswordMatch match) {
+  static num uppercase_variations(PasswordMatch match) {
     final word = match.token;
     if (ALL_LOWER.hasMatch(word) || word.toLowerCase() == word) {
       return 1;
@@ -464,7 +464,7 @@ class scoring {
         .split('')
         .where((element) => RegExp(r'[a-z]').hasMatch(element))
         .length;
-    int variations = 0;
+    num variations = 0;
     for (int i = 1; i <= Math.min(U, L); i++) {
       variations += nCk(U + L, i);
     }
