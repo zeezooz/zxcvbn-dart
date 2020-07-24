@@ -99,6 +99,7 @@ class feedback {
           'Avoid dates and years that are associated with you'
         ]);
     }
+    return default_feedback;
   }
 
   static Feedback get_dictionary_match_feedback(
