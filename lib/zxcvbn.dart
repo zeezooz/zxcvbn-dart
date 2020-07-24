@@ -7,7 +7,7 @@ import './src/scoring.dart';
 import './src/time_estimates.dart';
 
 class Zxcvbn {
-  evaluate(String password, {List<String> userInputs = const []}) {
+  Result evaluate(String password, {List<String> userInputs = const []}) {
     final start = _time;
     List<String> sanitized_inputs =
         userInputs.map((input) => input.toLowerCase()).toList();
