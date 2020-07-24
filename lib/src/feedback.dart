@@ -131,7 +131,7 @@ class feedback {
       warning = '';
     }
 
-    final suggestions = [];
+    final suggestions = <String>[];
     final word = match.token;
     if (scoring.START_UPPER.hasMatch(word)) {
       suggestions.add("Capitalization doesn't help very much");
