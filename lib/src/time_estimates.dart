@@ -1,24 +1,24 @@
 class time_estimates {
-  Map<String, dynamic> estimate_attack_times(int guesses) {
+  static Map<String, dynamic> estimate_attack_times(int guesses) {
     final crack_times_seconds = {
       'online_throttling_100_per_hour': guesses / (100 / 3600),
       'online_no_throttling_10_per_second': guesses / 10,
       'offline_slow_hashing_1e4_per_second': guesses / 1e4,
       'offline_fast_hashing_1e10_per_second': guesses / 1e10
     };
-    final crack_times_display = {};
+    final crack_times_display = <String, String>{};
     for (final scenario in crack_times_seconds.keys) {
       final seconds = crack_times_seconds[scenario];
-      crack_times_display[scenario] = this.display_time(seconds);
+      crack_times_display[scenario] = display_time(seconds);
     }
     return {
       'crack_times_seconds': crack_times_seconds,
       'crack_times_display': crack_times_display,
-      'score': this.guesses_to_score(guesses)
+      'score': guesses_to_score(guesses)
     };
   }
 
-  double guesses_to_score(int guesses) {
+  static double guesses_to_score(int guesses) {
     final DELTA = 5;
     if (guesses < 1e3 + DELTA) {
       return 0;
@@ -33,7 +33,7 @@ class time_estimates {
     }
   }
 
-  String display_time(double seconds) {
+  static String display_time(double seconds) {
     int base;
     int display_num;
     String display_str;

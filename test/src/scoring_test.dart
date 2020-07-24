@@ -1,8 +1,8 @@
 import 'dart:math' as Math;
 import 'package:test/test.dart';
-import 'package:zxcvbn/matching.dart';
-import 'package:zxcvbn/scoring.dart';
-import 'package:zxcvbn/match.dart';
+import 'package:zxcvbn/src/matching.dart';
+import 'package:zxcvbn/src/scoring.dart';
+import 'package:zxcvbn/src/match.dart';
 
 //matching = require '../src/matching'
 
@@ -50,7 +50,7 @@ void main() {
       [4, 2],
       [32, 5],
     ]) {
-      final n = i[0];
+      final n = i[0].toDouble();
       final result = i[1];
       expect(log2(n), result, reason: "log2(#{n}) == #{result}");
     }
@@ -59,12 +59,12 @@ void main() {
       [10, 1],
       [100, 2],
     ]) {
-      final n = i[0];
+      final n = i[0].toDouble();
       final result = i[1];
       expect(log10(n), result, reason: "log10(#{n}) == #{result}");
     }
-    final n = 17;
-    final p = 4;
+    final n = 17.toDouble();
+    final p = 4.toDouble();
     approx_equal(log10(n * p), log10(n) + log10(p), "product rule");
     approx_equal(log10(n / p), log10(n) - log10(p), "quotient rule");
     approx_equal(log10(Math.e), 1 / Math.log(10), "base switch rule");
@@ -72,7 +72,7 @@ void main() {
     approx_equal(log10(n), Math.log(n) / Math.log(10), "base change rule");
   });
   test('search', () {
-    final m = (i, j, guesses) => PasswordMatch()
+    final m = (int i, int j, double guesses) => PasswordMatch()
       ..i = i
       ..j = j
       ..guesses = guesses;
@@ -97,7 +97,7 @@ void main() {
 
     msg = (String s) =>
         "returns match + bruteforce when match covers a prefix of password: #{s}";
-    var matches = [m(0, 5, 1)];
+    var matches = [m(0, 5, 1.0)];
     m0 = matches[0];
     result = scoring.most_guessable_match_sequence(password, matches,
         exclude_additive: exclude_additive);
@@ -152,7 +152,7 @@ void main() {
     expect(result.sequence.length, 1, reason: msg("result.length == 1"));
     expect(result.sequence[0], m0, reason: msg("result.sequence[0] == m0"));
     // make sure ordering doesn't matter
-    m0.guesses = 3;
+    m0.guesses = 3.0;
     result = scoring.most_guessable_match_sequence(password, matches,
         exclude_additive: exclude_additive);
     expect(result.sequence.length, 1, reason: msg("result.length == 1"));
@@ -171,7 +171,7 @@ void main() {
 
     msg = (s) =>
         "when m0 covers m1 and m2, choose [m1, m2] when m0 > m1 * m2 * fact(2): #{s}";
-    m0.guesses = 5;
+    m0.guesses = 5.0;
     result = scoring.most_guessable_match_sequence(password, matches,
         exclude_additive: exclude_additive);
     expect(result.guesses, 4, reason: msg("total guesses == 4"));
@@ -212,7 +212,7 @@ void main() {
       final match = PasswordMatch()
         ..token = token
         ..base_token = base_token
-        ..base_guesses = base_guesses
+        ..base_guesses = base_guesses.round()
         ..repeat_count = repeat_count;
       final expected_guesses = base_guesses * repeat_count;
       final msg =
@@ -315,7 +315,7 @@ void main() {
     match.guesses = null;
     match.token = 'ZxCvbn';
     match.shifted_count = 2;
-    int shifted_guesses = base_guesses * (nCk(6, 2) + nCk(6, 1));
+    double shifted_guesses = base_guesses * (nCk(6, 2) + nCk(6, 1));
     msg =
         "guesses is added for shifted keys, similar to capitals in dictionary matching";
     expect(scoring.spatial_guesses(match), shifted_guesses, reason: msg);
@@ -333,7 +333,7 @@ void main() {
       ..graph = 'qwerty'
       ..turns = 3
       ..shifted_count = 0;
-    int guesses = 0;
+    double guesses = 0;
     int L = match.token.length;
     final s = scoring.KEYBOARD_STARTING_POSITIONS;
     final d = scoring.KEYBOARD_AVERAGE_DEGREE;
@@ -386,7 +386,7 @@ void main() {
       ..sub = {'@': 'a'};
     msg =
         "extra guesses are added for both capitalization and common l33t substitutions";
-    int expected = 32 *
+    double expected = 32.0 *
         scoring.l33t_variations(match) *
         scoring.uppercase_variations(match);
     expect(scoring.dictionary_guesses(match), expected, reason: msg);
@@ -414,40 +414,78 @@ void main() {
       expect(scoring.uppercase_variations(m), variants, reason: msg);
     }
   });
-  test ('l33t variants', () {
-  PasswordMatch match = PasswordMatch()..l33t = false;
-  expect( scoring.l33t_variations(match), 1, reason: "1 variant for non-l33t matches");
+  test('l33t variants', () {
+    PasswordMatch match = PasswordMatch()..l33t = false;
+    expect(scoring.l33t_variations(match), 1,
+        reason: "1 variant for non-l33t matches");
 
-  for (final testCase  in [
-    [ '',  1, {} ],
-    [ 'a', 1, {} ],
-    [ '4', 2, {'4': 'a'} ],
-    [ '4pple', 2, {'4': 'a'} ],
-    [ 'abcet', 1, {} ],
-    [ '4bcet', 2, {'4': 'a'} ],
-    [ 'a8cet', 2, {'8': 'b'} ],
-    [ 'abce+', 2, {'+': 't'} ],
-    [ '48cet', 4, {'4': 'a', '8': 'b'} ],
-    [ 'a4a4aa',  nCk(6, 2) + nCk(6, 1), {'4': 'a'} ],
-    [ '4a4a44',  nCk(6, 2) + nCk(6, 1), {'4': 'a'} ],
-    [ 'a44att+', (nCk(4, 2) + nCk(4, 1)) * nCk(3, 1), {'4': 'a', '+': 't'} ],
+    for (final testCase in [
+      ['', 1.0, {}],
+      ['a', 1.0, {}],
+      [
+        '4',
+        2.0,
+        {'4': 'a'}
+      ],
+      [
+        '4pple',
+        2.0,
+        {'4': 'a'}
+      ],
+      ['abcet', 1, {}],
+      [
+        '4bcet',
+        2.0,
+        {'4': 'a'}
+      ],
+      [
+        'a8cet',
+        2.0,
+        {'8': 'b'}
+      ],
+      [
+        'abce+',
+        2.0,
+        {'+': 't'}
+      ],
+      [
+        '48cet',
+        4.0,
+        {'4': 'a', '8': 'b'}
+      ],
+      [
+        'a4a4aa',
+        nCk(6, 2) + nCk(6, 1),
+        {'4': 'a'}
+      ],
+      [
+        '4a4a44',
+        nCk(6, 2) + nCk(6, 1),
+        {'4': 'a'}
+      ],
+      [
+        'a44att+',
+        (nCk(4, 2) + nCk(4, 1)) * nCk(3, 1),
+        {'4': 'a', '+': 't'}
+      ],
     ]) {
       final word = testCase[0];
-      int variants = testCase[1];
+      num v = testCase[1];
+      double variants = v.toDouble();
       final sub = testCase[2];
-    match = PasswordMatch()
-      ..token= word
-      ..sub= sub
-      ..l33t= ! matching.empty(sub);
-String     msg = "extra l33t guesses of #{word} is #{variants}";
-    expect( scoring.l33t_variations(match), variants, reason: msg);
-  match = PasswordMatch()
-    ..token= 'Aa44aA'
-    ..l33t= true
-    ..sub= {'4': 'a'};
-variants = nCk(6, 2) + nCk(6, 1);
-  msg = "capitalization doesn't affect extra l33t guesses calc";
-  expect( scoring.l33t_variations(match), variants, reason: msg);
+      match = PasswordMatch()
+        ..token = word
+        ..sub = sub
+        ..l33t = !matching.empty(sub);
+      String msg = "extra l33t guesses of #{word} is #{variants}";
+      expect(scoring.l33t_variations(match), variants, reason: msg);
+      match = PasswordMatch()
+        ..token = 'Aa44aA'
+        ..l33t = true
+        ..sub = {'4': 'a'};
+      variants = nCk(6, 2) + nCk(6, 1);
+      msg = "capitalization doesn't affect extra l33t guesses calc";
+      expect(scoring.l33t_variations(match), variants, reason: msg);
     }
   });
 }

@@ -5,22 +5,46 @@ import 'result.dart';
 
 //# on qwerty, 'g' has degree 6, being adjacent to 'ftyhbv'. '\' has degree 1.
 //# this calculates the average over all keys.
-int calc_average_degree(Map<String, List<String>> graph) {
-  double average = 0;
-  graph.forEach((key, neighbors) {
-    average += neighbors.length;
-  });
-  average /= graph.keys.length;
-  return average.round();
+double calc_average_degree(Map<String, List<String>> graph) {
+  num average;
+  var k, key, n;
+  List neighbors;
+  average = 0;
+  for (key in graph.keys) {
+    neighbors = graph[key];
+    average += () {
+      int l, len;
+      final results = [];
+      len = neighbors.length;
+      for (l = 0; l < len; l++) {
+        n = neighbors[l];
+        if (n != null) {
+          results.add(n);
+        }
+      }
+      return results;
+    }()
+        .length;
+  }
+  average /= () {
+    final results = [];
+    for (k in graph.keys) {
+      //v = graph[k];
+      results.add(k);
+    }
+    return results;
+  }()
+      .length;
+  return average;
 }
 
-const BRUTEFORCE_CARDINALITY = 10;
-const MIN_GUESSES_BEFORE_GROWING_SEQUENCE = 10000;
-const MIN_SUBMATCH_GUESSES_SINGLE_CHAR = 10;
-const MIN_SUBMATCH_GUESSES_MULTI_CHAR = 50;
+const BRUTEFORCE_CARDINALITY = 10.0;
+const MIN_GUESSES_BEFORE_GROWING_SEQUENCE = 10000.0;
+const MIN_SUBMATCH_GUESSES_SINGLE_CHAR = 10.0;
+const MIN_SUBMATCH_GUESSES_MULTI_CHAR = 50.0;
 
 class scoring {
-  static int nCk(int n, int k) {
+  static double nCk(num n, num k) {
     // http://blog.plover.com/math/choose.html
     if (k > n) {
       return 0;
@@ -28,24 +52,24 @@ class scoring {
     if (k == 0) {
       return 1;
     }
-    num r = 1;
+    double r = 1;
     for (int d = 1; d <= k; d++) {
       r *= n;
       r /= d;
       n -= 1;
     }
-    return r.round();
+    return r;
   }
 
-  static num log10(n) => Math.log(n) / Math.log(10);
-  static num log2(n) => Math.log(n) / Math.log(2);
+  static double log10(double n) => Math.log(n) / Math.log(10);
+  static double log2(double n) => Math.log(n) / Math.log(2);
 
-  static num factorial(num n) {
+  static double factorial(double n) {
     // unoptimized, called only on small n
     if (n < 2) {
       return 1;
     }
-    int f = 1;
+    double f = 1;
     for (int i = 2; i <= n; i++) {
       f *= i;
     }
@@ -85,7 +109,7 @@ class scoring {
   //
   // ------------------------------------------------------------------------------
 
-  static most_guessable_match_sequence(
+  static Result most_guessable_match_sequence(
       String password, List<PasswordMatch> matches,
       {exclude_additive = false}) {
     final n = password.length;
@@ -116,16 +140,17 @@ class scoring {
 
     // helper: considers whether a length-l sequence ending at match m is better (fewer guesses)
     // than previously encountered sequences, updating state if so.
-    final update = (PasswordMatch m, int l) {
+    final update = (PasswordMatch m, double l) {
       final k = m.j;
-      int pi = estimate_guesses(m, password);
-      if (l > 1)
+      double pi = estimate_guesses(m, password).toDouble();
+      if (l > 1) {
         // we're considering a length-l sequence ending with match m:
         // obtain the product term in the minimization function by multiplying m's guesses
         // by the product of the length-(l-1) sequence ending just before m, at m.i - 1.
         pi *= optimal['pi'][m.i - 1][l - 1];
+      }
       // calculate the minimization func
-      int g = factorial(l) * pi;
+      double g = factorial(l) * pi;
       if (!exclude_additive) {
         g += Math.pow(MIN_GUESSES_BEFORE_GROWING_SEQUENCE, l - 1);
       }
@@ -172,10 +197,11 @@ class scoring {
           // it is strictly better to have a single bruteforce match spanning the same region:
           // same contribution to the guess product with a lower length.
           // --> safe to skip those cases.
-          if (last_m.pattern != 'bruteforce') {
-            // try adding m to this length-l sequence.
-            update(m, l + 1);
+          if (last_m.pattern == 'bruteforce') {
+            continue;
           }
+          // try adding m to this length-l sequence.
+          update(m, l + 1);
         }
       }
     };
@@ -186,7 +212,7 @@ class scoring {
       var k = n - 1;
       // find the final best sequence length and score
       var l = null;
-      int g = 999999999999999999;
+      double g = double.infinity;
       optimal['g'][k].forEach((candidate_l, candidate_g) {
         if (candidate_g < g) {
           l = candidate_l;
@@ -219,7 +245,7 @@ class scoring {
     final optimal_l = optimal_match_sequence.length;
 
     // corner: empty password
-    num guesses;
+    double guesses;
     if (password.length == 0) {
       guesses = 1;
     } else {
@@ -229,7 +255,7 @@ class scoring {
     // final result object
     return Result()
       ..password = password
-      ..guesses = guesses
+      ..guesses = guesses.round()
       ..guesses_log10 = log10(guesses)
       ..sequence = optimal_match_sequence;
   }
@@ -237,12 +263,12 @@ class scoring {
   // ------------------------------------------------------------------------------
   // guess estimation -- one function per match pattern ---------------------------
   // ------------------------------------------------------------------------------
-  static int estimate_guesses(PasswordMatch match, String password) {
+  static double estimate_guesses(PasswordMatch match, String password) {
     // a match's guess estimate doesn't change. cache it.
     if (match.guesses != null) {
       return match.guesses;
     }
-    int min_guesses = 1;
+    double min_guesses = 1;
     if (match.token.length < password.length) {
       if (match.token.length == 1) {
         min_guesses = MIN_SUBMATCH_GUESSES_SINGLE_CHAR;
@@ -259,32 +285,32 @@ class scoring {
       'regex': regex_guesses,
       'date': date_guesses,
     };
-    final guesses = estimation_functions[match.pattern].call(match);
-    match.guesses = Math.max<int>(guesses, min_guesses);
+    final double guesses = estimation_functions[match.pattern].call(match);
+    match.guesses = Math.max<double>(guesses, min_guesses);
     match.guesses_log10 = log10(match.guesses);
     return match.guesses;
   }
 
-  static int bruteforce_guesses(PasswordMatch match) {
-    int guesses = Math.pow(BRUTEFORCE_CARDINALITY, match.token.length);
+  static double bruteforce_guesses(PasswordMatch match) {
+    double guesses = Math.pow(BRUTEFORCE_CARDINALITY, match.token.length);
     // small detail: make bruteforce matches at minimum one guess bigger than smallest allowed
     // submatch guesses, such that non-bruteforce submatches over the same [i..j] take precedence.
-    int min_guesses;
+    double min_guesses;
     if (match.token.length == 1) {
       min_guesses = MIN_SUBMATCH_GUESSES_SINGLE_CHAR + 1;
     } else {
       min_guesses = MIN_SUBMATCH_GUESSES_MULTI_CHAR + 1;
     }
-    return Math.max(guesses, min_guesses);
+    return Math.max<double>(guesses, min_guesses);
   }
 
-  static int repeat_guesses(PasswordMatch match) {
-    return match.base_guesses * match.repeat_count;
+  static double repeat_guesses(PasswordMatch match) {
+    return 1.0 * match.base_guesses * match.repeat_count;
   }
 
-  static int sequence_guesses(PasswordMatch match) {
+  static double sequence_guesses(PasswordMatch match) {
     final first_chr = match.token[0];
-    int base_guesses;
+    double base_guesses;
     // lower guesses for obvious starting points
     if (['a', 'A', 'z', 'Z', '0', '1', '9'].contains(first_chr)) {
       base_guesses = 4;
@@ -309,7 +335,7 @@ class scoring {
   static final MIN_YEAR_SPACE = 20;
   static final REFERENCE_YEAR = DateTime.now().year;
 
-  static int regex_guesses(PasswordMatch match) {
+  static double regex_guesses(PasswordMatch match) {
     final char_class_bases = {
       'alpha_lower': 26,
       'alpha_upper': 26,
@@ -319,7 +345,8 @@ class scoring {
       'symbols': 33,
     };
     if (char_class_bases[match.regex_name] != null) {
-      return Math.pow(char_class_bases[match.regex_name], match.token.length);
+      return Math.pow(char_class_bases[match.regex_name], match.token.length)
+          .toDouble();
     } else {
       switch (match.regex_name) {
         case 'recent_year':
@@ -328,17 +355,17 @@ class scoring {
           int year_space =
               (int.parse(match.regex_match[0]) - REFERENCE_YEAR).abs();
           year_space = Math.max(year_space, MIN_YEAR_SPACE);
-          return year_space;
+          return 1.0 * year_space;
       }
     }
     return null;
   }
 
-  static int date_guesses(PasswordMatch match) {
+  static double date_guesses(PasswordMatch match) {
     // base guesses: (year distance from REFERENCE_YEAR) * num_days * num_years
     final year_space =
         Math.max<int>((match.year - REFERENCE_YEAR).abs(), MIN_YEAR_SPACE);
-    int guesses = year_space * 365;
+    double guesses = year_space * 365.0;
     // add factor of 4 for separator selection (one of ~4 choices)
     if (match.separator != null && match.separator.isNotEmpty) {
       guesses *= 4;
@@ -347,18 +374,19 @@ class scoring {
   }
 
   static final KEYBOARD_AVERAGE_DEGREE =
-      calc_average_degree(adjacency_graphs.qwerty);
+      calc_average_degree(adjacency_graphs['qwerty']);
   // slightly different for keypad/mac keypad, but close enough
   static final KEYPAD_AVERAGE_DEGREE =
-      calc_average_degree(adjacency_graphs.keypad);
+      calc_average_degree(adjacency_graphs['keypad']);
 
   static final KEYBOARD_STARTING_POSITIONS =
-      adjacency_graphs.qwerty.keys.length;
-  static final KEYPAD_STARTING_POSITIONS = adjacency_graphs.keypad.keys.length;
+      adjacency_graphs['qwerty'].keys.length;
+  static final KEYPAD_STARTING_POSITIONS =
+      adjacency_graphs['keypad'].keys.length;
 
-  static int spatial_guesses(PasswordMatch match) {
+  static double spatial_guesses(PasswordMatch match) {
     int s;
-    int d;
+    double d;
     if (['qwerty', 'dvorak'].contains(match.graph)) {
       s = KEYBOARD_STARTING_POSITIONS;
       d = KEYBOARD_AVERAGE_DEGREE;
@@ -366,7 +394,7 @@ class scoring {
       s = KEYPAD_STARTING_POSITIONS;
       d = KEYPAD_AVERAGE_DEGREE;
     }
-    int guesses = 0;
+    double guesses = 0;
     int L = match.token.length;
     int t = match.turns;
     int possible_turns;
@@ -374,7 +402,7 @@ class scoring {
     for (int i = 2; i <= L; i++) {
       possible_turns = Math.min(t, i - 1);
       for (int j = 1; j <= possible_turns; j++) {
-        guesses += (nCk(i - 1, j - 1) * s * Math.pow(d, j)).round();
+        guesses += nCk(i - 1, j - 1) * s * Math.pow(d, j);
       }
     }
     // add extra guesses for shifted keys. (% instead of 5, A instead of a.)
@@ -395,13 +423,14 @@ class scoring {
     return guesses;
   }
 
-  static int dictionary_guesses(PasswordMatch match) {
+  static double dictionary_guesses(PasswordMatch match) {
     match.base_guesses =
         match.rank; //# keep these as properties for display purposes
-    match.uppercase_variations = uppercase_variations(match);
+    match.uppercase_variations = uppercase_variations(match).round();
     match.l33t_variations = l33t_variations(match);
     var reversed_variations = (match.reversed ?? false) ? 2 : 1;
-    return match.base_guesses *
+    return 1.0 *
+        match.base_guesses *
         match.uppercase_variations *
         match.l33t_variations *
         reversed_variations;
@@ -412,7 +441,7 @@ class scoring {
   static final RegExp ALL_UPPER = RegExp(r'^[^a-z]+$');
   static final RegExp ALL_LOWER = RegExp(r'^[^A-Z]+$');
 
-  static int uppercase_variations(PasswordMatch match) {
+  static num uppercase_variations(PasswordMatch match) {
     final word = match.token;
     if (ALL_LOWER.hasMatch(word) || word.toLowerCase() == word) {
       return 1;
@@ -436,7 +465,7 @@ class scoring {
         .split('')
         .where((element) => RegExp(r'[a-z]').hasMatch(element))
         .length;
-    int variations = 0;
+    num variations = 0;
     for (int i = 1; i <= Math.min(U, L); i++) {
       variations += nCk(U + L, i);
     }
@@ -454,7 +483,7 @@ class scoring {
       final S =
           chrs.where((chr) => chr == subbed).length; // num of subbed chars
       final U =
-          chrs.where((chr) => chr == unsubbed).length; // num of subbed chars
+          chrs.where((chr) => chr == unsubbed).length; // num of unsubbed chars
       if (S == 0 || U == 0) {
         // for this sub, password is either fully subbed (444) or fully unsubbed (aaa)
         // treat that as doubling the space (attacker needs to try fully subbed chars in addition to
@@ -466,7 +495,7 @@ class scoring {
         final p = Math.min(U, S);
         int possibilities = 0;
         for (int i = 1; i <= p; i++) {
-          possibilities += nCk(U + S, i);
+          possibilities += nCk(U + S, i).round();
         }
         variations *= possibilities;
       }
