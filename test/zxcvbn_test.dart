@@ -35,5 +35,30 @@ void main() {
       expect(result.score.round(), 0);
       expect(double.parse(result.guesses_log10.toStringAsFixed(5)), 0.69897);
     });
+    test('password with more subs', () {
+      final result = zxcvbn.evaluate(r'p@$$word');
+      expect(result.score.round(), 0);
+      expect(double.parse(result.guesses_log10.toStringAsFixed(5)), 0.95424);
+    });
+    test('123456', () {
+      final result = zxcvbn.evaluate(r'123456');
+      expect(result.score.round(), 0);
+      expect(double.parse(result.guesses_log10.toStringAsFixed(5)), 0.30103);
+    });
+    test('123456789', () {
+      final result = zxcvbn.evaluate(r'123456789');
+      expect(result.score.round(), 0);
+      expect(double.parse(result.guesses_log10.toStringAsFixed(5)), 0.77815);
+    });
+    test('11111111', () {
+      final result = zxcvbn.evaluate(r'11111111');
+      expect(result.score.round(), 0);
+      expect(double.parse(result.guesses_log10.toStringAsFixed(5)), 1.80618);
+    });
+    test('zxcvbnm,./', () {
+      final result = zxcvbn.evaluate(r'zxcvbnm,./');
+      expect(result.score.round(), 1);
+      expect(double.parse(result.guesses_log10.toStringAsFixed(5)), 3.58984);
+    });
   });
 }
