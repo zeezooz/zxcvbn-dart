@@ -1,5 +1,5 @@
 name: zxcvbn
-version: 0.0.1
+version: 1.0.0
 description: Dart port of DropBox's zxcvbn library.
 homepage: https://github.com/careapp-inc/zxcvbn-dart
 repository: https://github.com/careapp-inc/zxcvbn-dart
